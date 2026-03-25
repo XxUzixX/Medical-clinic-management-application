@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Przychodnia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Przychodnia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="/doctorhome">Strona główna</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/patients">Pacjenci</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/prescriptions/new">Wystaw recepte</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/appointments/doctor">Wizyty</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/schedule">Godziny pracy</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="/logout">Wyloguj się</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container">
+    <div class="row col-md-8 offset-md-2">
+        <div class="card">
+            <div th:if="${param.success}">
+                <div class="alert alert-success">Recepta została wystawiona pomyślnie!</div>
+            </div>
+            <div class="card-header">
+                <h2 class="text-center">Wystaw receptę</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" th:action="@{/doctor/prescriptions}" th:object="${prescription}">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Pacjent</label>
+                        <select class="form-control" name="patientEmail" required>
+                            <option value="" disabled selected>Wybierz pacjenta</option>
+                            <option th:each="patient : ${patients}" th:value="${patient.email}" th:text="${patient.firstName + ' ' + patient.lastName + ' (' + patient.email + ')'}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Lek</label>
+                        <input class="form-control" type="text" th:field="*{medication}" placeholder="Wprowadź nazwę leku" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Dawkowanie</label>
+                        <input class="form-control" type="text" th:field="*{dosage}" placeholder="Wprowadź dawkowanie" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Instrukcje</label>
+                        <input class="form-control" type="text" th:field="*{instructions}" placeholder="Wprowadź instrukcje" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <button class="btn btn-primary" type="submit">Wystaw receptę</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

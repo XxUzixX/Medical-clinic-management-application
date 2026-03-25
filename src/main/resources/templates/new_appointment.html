@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Przychodnia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous">
+    <style>
+        .form-select.form-select-lg { font-size: 1rem; padding-top: .6rem; padding-bottom: .6rem; }
+        .card { border-radius: .75rem; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Przychodnia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/userhome">Strona główna</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/doctors">Lekarze</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/userhome/prescriptions">Recepty</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/appointments/patient">Wizyty</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/appointments/new">Nowa wizyta</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/booking/ai">Umów przez AI</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">Wyloguj się</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div th:if="${param.success}">
+        <div class="alert alert-success">Wysłano zapytanie o wizytę</div>
+    </div>
+    <h1 class="text-center mb-4">Umów nową wizytę</h1>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <!-- Formularz -->
+            <form th:action="@{/appointments/new}"
+                  th:object="${appointment}"
+                  method="post"
+                  class="card p-4 shadow">
+                <div class="mb-3">
+                    <label for="specialization" class="form-label">Wybierz specjalizację:</label>
+                    <select class="form-select form-select-lg" id="specialization">
+                        <option value="">-- Wybierz specjalizację --</option>
+                        <option th:each="doc : ${doctors}"
+                                th:value="${doc.specialization}"
+                                th:text="${doc.specialization}"></option>
+                    </select>
+                    <small class="text-muted">Najpierw wybierz specjalizację, potem lekarza.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="doctorEmail" class="form-label">Wybierz lekarza:</label>
+                    <select class="form-select form-select-lg" name="doctorEmail" id="doctorEmail" disabled>
+                        <option value="">-- Wybierz lekarza --</option>
+                        <option th:each="doc : ${doctors}"
+                                th:value="${doc.email}"
+                                th:attr="data-spec=${doc.specialization}"
+                                th:text="${doc.name} + ' — ' + ${doc.specialization}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="date" class="form-label">Data:</label>
+                    <input type="date" class="form-control" id="date" name="date"
+                           th:value="${appointment.date}" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="time" class="form-label">Godzina:</label>
+                    <input type="time" class="form-control" id="time" name="time"
+                           th:value="${appointment.time}" required/>
+                </div>
+                <button type="submit" class="btn btn-primary">Umów</button>
+
+                <div th:if="${error}" class="text-danger mt-3" th:text="${error}"></div>
+            </form>
+        </div>
+    </div>
+
+    <hr class="my-4"/>
+
+
+    <div th:each="doc : ${doctors}"
+         th:id="'schedule__' + ${doc.email}"
+         class="doctor-schedule"
+         style="display: none;">
+        <h4>Godziny pracy dla <span th:text="${doc.name}"></span></h4>
+
+        <div th:if="${doc.schedules != null and #lists.size(doc.schedules) > 0}">
+            <ul>
+                <li th:each="sch : ${doc.schedules}"
+                    th:text="${sch.polishDay} + ' ' + ${sch.startTime} + '-' + ${sch.endTime}">
+                </li>
+            </ul>
+        </div>
+        <div th:if="${doc.schedules == null or #lists.isEmpty(doc.schedules)}">
+            <em>Brak zdefiniowanego grafiku</em>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXlDZ/2Eos8UPL4zYG8goKUpR91VXqX+jn5/tv7z8a9 +wK0f5y2A4gNfV/3g" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVQI6Y92hDkd7AZEVLK4P+JW6POJKndj0iZ6mPfpX9vvSqsR8+j7u7f9F2z0g+B8" crossorigin="anonymous"></script>
+
+
+<script>
+    const doctorSelect = document.getElementById('doctorEmail');
+    const specSelect = document.getElementById('specialization');
+    const schedules = document.querySelectorAll('.doctor-schedule');
+
+    (function buildSpecializations() {
+        const allSpecValues = Array.from(doctorSelect.querySelectorAll('option'))
+            .map(o => o.getAttribute('data-spec'))
+            .filter(v => v && v.trim().length > 0);
+        const unique = Array.from(new Set(allSpecValues)).sort((a, b) => a.localeCompare(b, 'pl'));
+
+        const placeholder = specSelect.querySelector('option[value=""]');
+        specSelect.innerHTML = '';
+        if (placeholder) specSelect.appendChild(placeholder);
+        unique.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v;
+            opt.textContent = v;
+            specSelect.appendChild(opt);
+        });
+    })();
+
+    function showScheduleFor(email) {
+        schedules.forEach(div => div.style.display = 'none');
+        if (!email) return;
+        const target = document.getElementById('schedule__' + email);
+        if (target) target.style.display = 'block';
+    }
+
+    specSelect.addEventListener('change', () => {
+        const chosen = specSelect.value;
+        showScheduleFor(null);
+
+        const options = Array.from(doctorSelect.querySelectorAll('option'));
+        options.forEach(opt => {
+            if (!opt.value) return;
+            const spec = opt.getAttribute('data-spec');
+            const visible = !chosen || spec === chosen;
+            opt.hidden = !visible;
+        });
+
+        doctorSelect.disabled = !chosen;
+        doctorSelect.value = '';
+    });
+
+    doctorSelect.addEventListener('change', (e) => {
+        showScheduleFor(e.target.value);
+    });
+</script>
+</body>
+</html>

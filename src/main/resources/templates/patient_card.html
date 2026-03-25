@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Karta pacjenta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .note-box { height: 260px; overflow: auto; }
+    </style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Przychodnia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="/doctorhome">Strona główna</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/patients">Pacjenci</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/prescriptions/new">Wystaw recepte</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/appointments/doctor">Wizyty</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/schedule">Godziny pracy</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="/logout">Wyloguj się</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeTab}=='summary' ? ' active' : ''" data-bs-toggle="tab" href="#tab-summary" role="tab">Podsumowanie / Recepty</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeTab}=='notes' ? ' active' : ''" data-bs-toggle="tab" href="#tab-notes" role="tab">Notatki</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeTab}=='newNote' ? ' active' : ''" data-bs-toggle="tab" href="#tab-new" role="tab">Nowa notatka</a>
+        </li>
+    </ul>
+
+    <div class="tab-content pt-3">
+        <div class="tab-pane fade" th:classappend="${activeTab}=='summary' ? ' show active' : ''" id="tab-summary" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header">Dane pacjenta</div>
+                        <div class="card-body">
+                            <p><strong>Imię i nazwisko:</strong> <span th:text="${patient.name}">Pacjent</span></p>
+                            <p><strong>Email:</strong> <span th:text="${patient.email}">—</span></p>
+                            <p><strong>Telefon:</strong> <span th:text="${patient.phoneNumber}">—</span></p>
+                            <p><strong>Adres:</strong>
+                                <span th:text="${patient.street}">—</span>,
+                                <span th:text="${patient.postalCode}">—</span>
+                                <span th:text="${patient.city}">—</span>,
+                                <span th:text="${patient.state}">—</span>
+                            </p>
+                            <a class="btn btn-sm btn-outline-secondary" href="/doctor/patients">← Powrót do listy</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Recepty</span>
+                            <a class="btn btn-sm btn-primary" href="/doctor/prescriptions/new">+ Nowa recepta</a>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${#lists.isEmpty(prescriptions)}" class="text-muted">Brak recept</div>
+                            <table th:if="${!#lists.isEmpty(prescriptions)}" class="table table-sm">
+                                <thead>
+                                <tr>
+                                    <th>#</th><th>Lek</th><th>Dawkowanie</th><th>Instrukcje</th><th>Wystawiona</th><th>Akcje</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="p, iStat : ${prescriptions}">
+                                    <td th:text="${iStat.index + 1}">1</td>
+                                    <td th:text="${p.medication}">Lek</td>
+                                    <td th:text="${p.dosage}">Dawkowanie</td>
+                                    <td th:text="${p.instructions}">Instrukcje</td>
+                                    <td th:text="${#temporals.format(p.issuedAt, 'yyyy-MM-dd HH:mm')}">2025-01-01</td>
+                                    <td>
+                                        <form th:action="@{|/doctor/patients/${patient.id}/prescriptions/${p.id}/delete|}" method="post"
+                                              onsubmit="return confirm('Usunąć tę receptę?');">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Usuń</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${activeTab}=='notes' ? ' show active' : ''" id="tab-notes" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Notatki (AI + własne)</span>
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{|/doctor/patients/${patient.id}?tab=newNote|}">+ Nowa notatka</a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${#lists.isEmpty(notes)}" class="text-muted">Brak notatek</div>
+
+                    <div class="list-group" th:if="${!#lists.isEmpty(notes)}">
+                        <div class="list-group-item" th:each="n : ${notes}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted" th:text="${#temporals.format(n.createdAt,'yyyy-MM-dd HH:mm')}">data</small>
+                                    <span class="badge ms-2" th:classappend="${n.approved} ? 'bg-success' : 'bg-secondary'"
+                                          th:text="${n.approved} ? 'zatwierdzona' : 'robocza'">robocza</span>
+                                </div>
+                                <div class="btn-group">
+                                    <form th:action="@{|/doctor/patients/${patient.id}/notes/${n.id}/approve|}" method="post" th:if="${!n.approved}">
+                                        <button class="btn btn-sm btn-outline-success" type="submit">Zatwierdź</button>
+                                    </form>
+                                    <button class="btn btn-sm btn-outline-primary" type="button"
+                                            data-bs-toggle="modal"
+                                            th:attr="data-bs-target=${'#editNoteModal_' + n.id}">
+                                        Edytuj
+                                    </button>
+                                    <form th:action="@{|/doctor/patients/${patient.id}/notes/${n.id}/delete|}" method="post"
+                                          onsubmit="return confirm('Usunąć tę notatkę?');">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Usuń</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <label class="form-label"><strong>Oryginał</strong></label>
+                                    <pre class="bg-light border rounded p-2 note-box" th:text="${n.originalText}">...</pre>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><strong>Wynik AI</strong></label>
+                                    <pre class="bg-light border rounded p-2 note-box" th:text="${n.aiText}">...</pre>
+                                </div>
+                            </div>
+
+                            <!-- Edit modal -->
+                            <div class="modal fade" th:id="${'editNoteModal_'+n.id}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                    <div class="modal-content">
+                                        <form th:action="@{|/doctor/patients/${patient.id}/notes/${n.id}/edit|}" method="post">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Edytuj notatkę</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-2">
+                                                    <label class="form-label">Oryginał</label>
+                                                    <textarea class="form-control" name="originalText" rows="6" th:text="${n.originalText}"></textarea>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">AI</label>
+                                                    <textarea class="form-control" name="aiText" rows="6" th:text="${n.aiText}"></textarea>
+                                                </div>
+                                                <small class="text-muted">Po edycji notatka wraca do statusu „robocza”.</small>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
+                                                <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${activeTab}=='newNote' ? ' show active' : ''" id="tab-new" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header">Nowa notatka</div>
+                <div class="card-body">
+                    <form th:action="@{|/doctor/patients/${patient.id}/notes/draft|}" method="post" class="mb-3">
+                        <div class="mb-2">
+                            <label class="form-label">Oryginał</label>
+                            <textarea class="form-control" name="originalText" rows="8" th:text="${draftOriginal}"></textarea>
+                        </div>
+                        <button class="btn btn-outline-success" type="submit">Streszcz z AI (bez zapisu)</button>
+                        <a class="btn btn-outline-secondary ms-2" th:href="@{|/doctor/patients/${patient.id}?tab=notes|}">Anuluj</a>
+                    </form>
+
+                    <div th:if="${draftAi}">
+                        <h6>Proponowane streszczenie AI</h6>
+                        <form th:action="@{|/doctor/patients/${patient.id}/notes/create|}" method="post">
+                            <div class="mb-2">
+                                <label class="form-label">AI</label>
+                                <textarea class="form-control" name="aiText" rows="8" th:text="${draftAi}"></textarea>
+                            </div>
+                            <input type="hidden" name="originalText" th:value="${draftOriginal}"/>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" type="submit" name="approve" value="false">Zapisz jako roboczą</button>
+                                <button class="btn btn-success" type="submit" name="approve" value="true">Zapisz i zatwierdź</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

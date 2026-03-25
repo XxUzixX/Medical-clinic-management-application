@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Przychodnia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Przychodnia</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="/doctorhome">Strona główna</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/patients">Pacjenci</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/prescriptions/new">Wystaw recepte</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/appointments/doctor">Wizyty</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/doctor/schedule">Godziny pracy</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="/logout">Wyloguj się</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container mt-4">
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <h2>Grafik Lekarza</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Dzień tygodnia</th>
+            <th>Od</th>
+            <th>Do</th>
+            <th>Akcje</th>
+        </tr>
+        </thead>
+        <tbody>
+       <tr th:each="sch : ${schedules}">
+           <td th:text="${sch.polishDay}">Nieznany</td>
+           <td th:text="${sch.startTime}">08:00</td>
+           <td th:text="${sch.endTime}">16:00</td>
+           <td>
+               <form th:action="@{/doctor/schedule/delete/{id}(id=${sch.id})}" method="post">
+                   <button class="btn btn-danger btn-sm">Usuń</button>
+               </form>
+           </td>
+       </tr>
+        </tbody>
+    </table>
+
+    <hr/>
+    <h4>Dodaj nowy wpis</h4>
+    <form th:action="@{/doctor/schedule}" th:object="${newSchedule}" method="post">
+        <div class="mb-3">
+            <label>Dzień tygodnia:</label>
+            <select th:field="*{dayOfWeek}" class="form-select">
+                <option th:each="dw : ${daysOfWeek}"
+                        th:value="${dw}"
+                th:text="${(dw == T(java.time.DayOfWeek).MONDAY) ? 'Poniedziałek' : (dw == T(java.time.DayOfWeek).TUESDAY) ? 'Wtorek' : (dw == T(java.time.DayOfWeek).WEDNESDAY) ? 'Środa' : (dw == T(java.time.DayOfWeek).THURSDAY) ? 'Czwartek' : (dw == T(java.time.DayOfWeek).FRIDAY) ? 'Piątek' : (dw == T(java.time.DayOfWeek).SATURDAY) ? 'Sobota' : (dw == T(java.time.DayOfWeek).SUNDAY) ? 'Niedziela' : 'Nieznany'}">
+                </option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>Godzina start:</label>
+            <input type="time" class="form-control" id="start" name="start"/>
+        </div>
+        <div class="mb-3">
+            <label>Godzina koniec:</label>
+            <input type="time" class="form-control" id="end" name="end"/>
+        </div>
+        <button class="btn btn-primary">Zapisz</button>
+
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
